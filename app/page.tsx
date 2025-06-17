@@ -6,13 +6,13 @@ export default function Home() {
     <GuideInfoBox>
       <ul>
         <li className="text-l">
-          🤝
+          🧱
           <span className="ml-2">
-            This template showcases a simple chatbot using{" "}
+            This template showcases how to output structured responses with a{" "}
             <a href="https://js.langchain.com/" target="_blank">
               LangChain.js
             </a>{" "}
-            and the Vercel{" "}
+            chain and the Vercel{" "}
             <a href="https://sdk.vercel.ai/docs" target="_blank">
               AI SDK
             </a>{" "}
@@ -23,30 +23,52 @@ export default function Home() {
             project.
           </span>
         </li>
+        <li>
+          ☎️
+          <span className="ml-2">
+            The chain formats the input schema and passes it into an OpenAI
+            Functions model, then parses the output.
+          </span>
+        </li>
         <li className="hidden text-l md:block">
           💻
           <span className="ml-2">
-            You can find the prompt and model logic for this use-case in{" "}
-            <code>app/api/chat/route.ts</code>.
+            You can find the prompt, model, and schema logic for this use-case
+            in <code>app/api/chat/structured_output/route.ts</code>.
           </span>
         </li>
-        <li>
-          🏴‍☠️
+        <li className="hidden text-l md:block">
+          📊
           <span className="ml-2">
-            By default, the bot is pretending to be a pirate, but you can change
-            the prompt to whatever you want!
+            By default, the chain returns an object with <code>tone</code>,{" "}
+            <code>word_count</code>, <code>entity</code>,{" "}
+            <code>chat_response</code>, and an optional{" "}
+            <code>final_punctuation</code>, but you can change it to whatever
+            you&apos;d like!
+          </span>
+        </li>
+        <li className="hidden text-l md:block">
+          💎
+          <span className="ml-2">
+            It uses a lightweight, convenient, and powerful{" "}
+            <a href="https://zod.dev/" target="_blank">
+              schema validation library called Zod
+            </a>{" "}
+            to define schemas, but you can initialize the chain with JSON schema
+            too.
           </span>
         </li>
         <li className="hidden text-l md:block">
           🎨
           <span className="ml-2">
-            The main frontend logic is found in <code>app/page.tsx</code>.
+            The main frontend logic is found in{" "}
+            <code>app/structured_output/page.tsx</code>.
           </span>
         </li>
         <li className="text-l">
           👇
           <span className="ml-2">
-            Try asking e.g. <code>What is it like to be a pirate?</code> below!
+            Try typing e.g. <code>What a beautiful day!</code> below!
           </span>
         </li>
       </ul>
@@ -54,10 +76,10 @@ export default function Home() {
   );
   return (
     <ChatWindow
-      endpoint="api/chat"
-      emoji="🏴‍☠️"
-      placeholder="I'm an LLM pretending to be a pirate! Ask me about the pirate life!"
+      endpoint="api/chat/structured_output"
       emptyStateComponent={InfoCard}
+      placeholder={`No matter what you type here, I'll always return the same JSON object with the same structure!`}
+      emoji="🧱"
     />
   );
 }
