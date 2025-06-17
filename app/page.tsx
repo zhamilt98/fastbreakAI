@@ -78,7 +78,7 @@ export default function Home() {
     <ChatWindow
       endpoint="api/chat/structured_output"
       emptyStateComponent={InfoCard}
-      placeholder={`No matter what you type here, I'll always return the same JSON object with the same structure!`}
+      placeholder={`Hello! I am an AI Agent that can assist you with creating a tournament schedule. Please provide me with the details of the constraints and requirements for the tournament, and I will structure it for you.`}
       emoji="🧱"
     />
   );
