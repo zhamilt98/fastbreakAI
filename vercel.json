@@ -1,7 +1,7 @@
 {
   "builds": [
     {
-      "src": "frontend/package.json",
+      "src": "app/package.json",
       "use": "@vercel/next"
     },
     {
@@ -16,7 +16,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "frontend/$1"
+      "dest": "app/$1"
     }
   ]
 }
