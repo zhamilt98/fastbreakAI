@@ -14,5 +14,9 @@
       "src": "/chat/(.*)",
       "dest": "app/pyapi/main.py"
     }
+    {
+      "src": "/(.*)",
+      "dest": "app/$1"
+    }
   ]
 }
