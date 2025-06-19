@@ -16,7 +16,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "app/$1"
+      "dest": "app/page.tsx"
     }
   ]
 }
