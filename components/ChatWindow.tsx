@@ -1,8 +1,9 @@
 "use client";
 
 import { type Message } from "ai";
-import { useChat } from "ai/react";
 import { useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 import type { FormEvent, ReactNode } from "react";
 import { toast } from "sonner";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
@@ -12,7 +13,6 @@ import { IntermediateStep } from "./IntermediateStep";
 import { Button } from "./ui/button";
 import { ArrowDown, LoaderCircle, Paperclip } from "lucide-react";
 import { Checkbox } from "./ui/checkbox";
-import { UploadDocumentsForm } from "./UploadDocumentsForm";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,8 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { cn } from "@/utils/cn";
+
+// ... (ChatMessages, ChatInput, ScrollToBottom, StickyToBottomContent, ChatLayout remain unchanged)
 
 function ChatMessages(props: {
   messages: Message[];
@@ -165,6 +167,8 @@ export function ChatLayout(props: { content: ReactNode; footer: ReactNode }) {
   );
 }
 
+// --- UPDATED ChatWindow BELOW ---
+
 export function ChatWindow(props: {
   endpoint: string;
   emptyStateComponent: ReactNode;
@@ -182,122 +186,171 @@ export function ChatWindow(props: {
   const [sourcesForMessages, setSourcesForMessages] = useState<
     Record<string, any>
   >({});
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const chat = useChat({
-    api: props.endpoint,
-    onResponse(response) {
-      const sourcesHeader = response.headers.get("x-sources");
-      const sources = sourcesHeader
-        ? JSON.parse(Buffer.from(sourcesHeader, "base64").toString("utf8"))
-        : [];
-
-      const messageIndexHeader = response.headers.get("x-message-index");
-      if (sources.length && messageIndexHeader !== null) {
-        setSourcesForMessages({
-          ...sourcesForMessages,
-          [messageIndexHeader]: sources,
-        });
-      }
-    },
-    streamMode: "text",
-    onError: (e) =>
-      toast.error(`Error while processing your request`, {
-        description: e.message,
-      }),
-  });
+  const router = useRouter();
 
   async function sendMessage(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (chat.isLoading || intermediateStepsLoading) return;
+    if (isLoading || intermediateStepsLoading) return;
 
     if (!showIntermediateSteps) {
-      chat.handleSubmit(e);
+      // Normal message send
+      setIsLoading(true);
+      try {
+        const userMessage: Message = {
+          id: messages.length.toString(),
+          content: input,
+          role: "user",
+        };
+        const newMessages = [...messages, userMessage];
+        setMessages(newMessages);
+        setInput("");
+        const response = await axios.post(
+          props.endpoint,
+          { messages: newMessages },
+          { validateStatus: () => true }
+        );
+
+        // Send the constraints response as a chat message
+        if (response.data?.constraints) {
+          setMessages([
+            ...newMessages,
+            {
+              id: (newMessages.length).toString(),
+              content: JSON.stringify(response.data.constraints, null, 2),
+              role: "assistant",
+            },
+          ]);
+          setIsLoading(false);
+          return;
+        }
+        if (response.status !== 200) {
+          toast.error(`Error while processing your request`, {
+            description: response.data?.error || "Unknown error",
+          });
+          setIsLoading(false);
+          return;
+        }
+        const responseMessages: Message[] = response.data.messages;
+        setMessages([...newMessages, ...responseMessages]);
+        // Optionally, handle x-sources and x-message-index headers if needed
+        const sourcesHeader = response.headers["x-sources"];
+        const messageIndexHeader = response.headers["x-message-index"];
+        if (sourcesHeader && messageIndexHeader !== undefined) {
+          let sources = [];
+          try {
+            sources = JSON.parse(
+              Buffer.from(sourcesHeader, "base64").toString("utf8")
+            );
+          } catch {}
+          if (sources.length) {
+            setSourcesForMessages((prev) => ({
+              ...prev,
+              [messageIndexHeader]: sources,
+            }));
+          }
+        }
+      } catch (e: any) {
+        toast.error(`Error while processing your request`, {
+          description: e.message,
+        });
+      }
+      setIsLoading(false);
       return;
     }
 
     // Some extra work to show intermediate steps properly
     setIntermediateStepsLoading(true);
 
-    chat.setInput("");
-    const messagesWithUserReply = chat.messages.concat({
-      id: chat.messages.length.toString(),
-      content: chat.input,
+    setInput("");
+    const messagesWithUserReply = messages.concat({
+      id: messages.length.toString(),
+      content: input,
       role: "user",
     });
-    chat.setMessages(messagesWithUserReply);
-
-    const response = await fetch(props.endpoint, {
-      method: "POST",
-      body: JSON.stringify({
-        messages: messagesWithUserReply,
-        show_intermediate_steps: true,
-      }),
-    });
-    const json = await response.json();
-    setIntermediateStepsLoading(false);
-
-    if (!response.ok) {
-      toast.error(`Error while processing your request`, {
-        description: json.error,
-      });
-      return;
-    }
-
-    const responseMessages: Message[] = json.messages;
-
-    // Represent intermediate steps as system messages for display purposes
-    // TODO: Add proper support for tool messages
-    const toolCallMessages = responseMessages.filter(
-      (responseMessage: Message) => {
-        return (
-          (responseMessage.role === "assistant" &&
-            !!responseMessage.tool_calls?.length) ||
-          responseMessage.role === "tool"
-        );
-      },
-    );
-
-    const intermediateStepMessages = [];
-    for (let i = 0; i < toolCallMessages.length; i += 2) {
-      const aiMessage = toolCallMessages[i];
-      const toolMessage = toolCallMessages[i + 1];
-      intermediateStepMessages.push({
-        id: (messagesWithUserReply.length + i / 2).toString(),
-        role: "system" as const,
-        content: JSON.stringify({
-          action: aiMessage.tool_calls?.[0],
-          observation: toolMessage.content,
-        }),
-      });
-    }
-    const newMessages = messagesWithUserReply;
-    for (const message of intermediateStepMessages) {
-      newMessages.push(message);
-      chat.setMessages([...newMessages]);
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000 + Math.random() * 1000),
+    setMessages(messagesWithUserReply);
+    try {
+      const response = await axios.post(
+        props.endpoint,
+        {
+          messages: messagesWithUserReply,
+          show_intermediate_steps: true,
+        },
+        { validateStatus: () => true }
       );
-    }
+      setIntermediateStepsLoading(false);
 
-    chat.setMessages([
-      ...newMessages,
-      {
-        id: newMessages.length.toString(),
-        content: responseMessages[responseMessages.length - 1].content,
-        role: "assistant",
-      },
-    ]);
+      if (response.status !== 200) {
+        toast.error(`Error while processing your request`, {
+          description: response.data?.error || "Unknown error",
+        });
+        return;
+      }
+
+      const responseMessages: Message[] = response.data.messages;
+
+      // Represent intermediate steps as system messages for display purposes
+      // TODO: Add proper support for tool messages
+      const toolCallMessages = responseMessages.filter(
+        (responseMessage: Message) => {
+          return (
+            (responseMessage.role === "assistant" &&
+              !!responseMessage.tool_calls?.length) ||
+            responseMessage.role === "tool"
+          );
+        },
+      );
+
+      const intermediateStepMessages = [];
+      for (let i = 0; i < toolCallMessages.length; i += 2) {
+        const aiMessage = toolCallMessages[i];
+        const toolMessage = toolCallMessages[i + 1];
+        intermediateStepMessages.push({
+          id: (messagesWithUserReply.length + i / 2).toString(),
+          role: "system" as const,
+          content: JSON.stringify({
+            action: aiMessage.tool_calls?.[0],
+            observation: toolMessage.content,
+          }),
+        });
+      }
+      const newMessages = [...messagesWithUserReply];
+      for (const message of intermediateStepMessages) {
+        newMessages.push(message);
+        setMessages([...newMessages]);
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 + Math.random() * 1000),
+        );
+      }
+
+      setMessages([
+        ...newMessages,
+        {
+          id: (newMessages.length).toString(),
+          content: responseMessages[responseMessages.length - 1].content,
+          role: "assistant",
+        },
+      ]);
+    } catch (e: any) {
+      setIntermediateStepsLoading(false);
+      toast.error(`Error while processing your request`, {
+        description: e.message,
+      });
+    }
   }
 
   return (
     <ChatLayout
       content={
-        chat.messages.length === 0 ? (
+        messages.length === 0 ? (
           <div>{props.emptyStateComponent}</div>
         ) : (
           <ChatMessages
             aiEmoji={props.emoji}
-            messages={chat.messages}
+            messages={messages}
             emptyStateComponent={props.emptyStateComponent}
             sourcesForMessages={sourcesForMessages}
           />
@@ -305,10 +358,10 @@ export function ChatWindow(props: {
       }
       footer={
         <ChatInput
-          value={chat.input}
-          onChange={chat.handleInputChange}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
           onSubmit={sendMessage}
-          loading={chat.isLoading || intermediateStepsLoading}
+          loading={isLoading || intermediateStepsLoading}
           placeholder={props.placeholder ?? "What's it like to be a pirate?"}
         >
           {props.showIngestForm && (
@@ -317,21 +370,12 @@ export function ChatWindow(props: {
                 <Button
                   variant="ghost"
                   className="pl-2 pr-3 -ml-2"
-                  disabled={chat.messages.length !== 0}
+                  disabled={messages.length !== 0}
                 >
                   <Paperclip className="size-4" />
                   <span>Upload document</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Upload document</DialogTitle>
-                  <DialogDescription>
-                    Upload a document to use for the chat.
-                  </DialogDescription>
-                </DialogHeader>
-                <UploadDocumentsForm />
-              </DialogContent>
             </Dialog>
           )}
 
@@ -341,7 +385,7 @@ export function ChatWindow(props: {
                 id="show_intermediate_steps"
                 name="show_intermediate_steps"
                 checked={showIntermediateSteps}
-                disabled={chat.isLoading || intermediateStepsLoading}
+                disabled={isLoading || intermediateStepsLoading}
                 onCheckedChange={(e) => setShowIntermediateSteps(!!e)}
               />
               <label htmlFor="show_intermediate_steps" className="text-sm">

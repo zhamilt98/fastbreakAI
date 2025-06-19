@@ -47,6 +47,8 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 Backend logic lives in `app/api/chat/route.ts`. From here, you can change the prompt and model, or add other modules and logic.
 
+**Backend API is now powered by FastAPI (Python). All API endpoints are available under `/pyapi/` (e.g., `/pyapi/chat`). Make sure to run the FastAPI server alongside Next.js and configure a proxy if needed.**
+
 ## 🧱 Structured Output
 
 The second example shows how to have a model return output according to a specific schema using OpenAI Functions.
