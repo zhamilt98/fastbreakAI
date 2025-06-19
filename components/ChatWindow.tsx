@@ -240,7 +240,7 @@ export function ChatWindow(props: {
         const sourcesHeader = response.headers["x-sources"];
         const messageIndexHeader = response.headers["x-message-index"];
         if (sourcesHeader && messageIndexHeader !== undefined) {
-          let sources = [];
+            let sources: unknown[] = [];
           try {
             sources = JSON.parse(
               Buffer.from(sourcesHeader, "base64").toString("utf8")
