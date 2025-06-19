@@ -16,7 +16,9 @@ Set up a virtual python environment and activate it
 
 cd into app/pyapi and install requirements.txt
 
-```fastapi run main.py```
+```bash
+fastapi run main.py
+```
 
 Now you're ready to run the development server:
 
