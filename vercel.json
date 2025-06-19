@@ -11,12 +11,8 @@
   ],
   "routes": [
     {
-      "src": "/pyapi/(.*)",
-      "dest": "app/pyapi/main.py"
-    },
-    {
       "src": "/(.*)",
-      "dest": "app/page.tsx"
+      "dest": "app/pyapi/main.py"
     }
   ]
 }
