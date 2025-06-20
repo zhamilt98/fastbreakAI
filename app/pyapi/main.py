@@ -16,6 +16,8 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
+app.mount("/_next", StaticFiles(directory="../../.next"), name="next_static")
+app.mount("/", StaticFiles(directory="../../.next/static"), name="next_root")
 
 @app.get("/")
 def serve_app():
