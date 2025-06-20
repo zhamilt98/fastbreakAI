@@ -16,11 +16,11 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-app.mount("/_next", StaticFiles(directory="../../.next"), name="next_static")
-app.mount("/", StaticFiles(directory="../../.next/static"), name="next_root")
+app.mount("/_next", StaticFiles(directory="./.next"), name="next_static")
+app.mount("/", StaticFiles(directory="/.next/static"), name="next_root")
 
 @app.get("/")
 def serve_app():
-    return FileResponse("../../.next/server/pages/index.html")
+    return FileResponse("/_next/server/pages/index.html")
 app.include_router(structured_output_router)
 
