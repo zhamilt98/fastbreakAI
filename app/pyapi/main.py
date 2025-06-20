@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers.chat import chat_router
-from .routers.structured_output import structured_output_router    
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from .routers.structured_output import structured_output_router   
 
 
 app = FastAPI()
@@ -15,9 +16,9 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
+
 @app.get("/")
-def health_check():
-    return 'Health check complete'
-app.include_router(chat_router)
+def serve_app():
+    return FileResponse("../../.next/server/pages/index.html")
 app.include_router(structured_output_router)
 
