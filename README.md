@@ -29,12 +29,9 @@ yarn dev
 
 ## 🧱 Structured Output
 
-The second example shows how to have a model return output according to a specific schema using OpenAI Functions.
-Click the `Structured Output` link in the navbar to try it out:
+The functionality of this is still very basic. The chat will take in a list of natural language constraints and it will return a list of json objects
 
-![A streaming conversation between the user and an AI agent](/public/images/structured-output-conversation.png)
+## Continiued development
 
-The chain in this example uses a [popular library called Zod](https://zod.dev) to construct a schema, then formats it in the way OpenAI expects.
-It then passes that schema as a function into OpenAI and passes a `function_call` parameter to force OpenAI to return arguments in the specified format.
-
-For more details, [check out this documentation page](https://js.langchain.com/docs/how_to/structured_output).
+- Authentication
+- Data Persistence
