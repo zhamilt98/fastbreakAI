@@ -66,9 +66,29 @@
   code {
     @apply dark:text-orange-400 text-orange-700;
   }
-
+  form {
+    padding: 6px;
+  }
+  input{
+    color: rgb(61, 61, 61);
+    margin: 3px;
+  }
   li {
     padding: 4px;
+  }
+  .container {
+    justify-items: center;
+    color: white;
+    background-color: rgb(61, 61, 61);
+    border-radius: 0.5rem;
+  }
+  button {
+    border: 1px solid white;
+    border-radius: 0.5rem;
+  }
+  button:hover {
+    background-color: white;
+    color: rgb(61, 61, 61);
   }
 
   .hide-scrollbar::-webkit-scrollbar {

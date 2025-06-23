@@ -1,12 +1,12 @@
-{
+{  
    "builds": [
-        {
-            "src": "/app/pyapi/main.py",
-            "use": "@vercel/python"
-        },
         {
             "src": "package.json",
             "use": "@vercel/next"
+        },
+        {
+            "src": "/app/pyapi/main.py",
+            "use": "@vercel/python"
         }
     ],
     "routes": [

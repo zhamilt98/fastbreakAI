@@ -8,9 +8,11 @@ from dotenv import load_dotenv
 import numpy as np
 import os
 import json
+from app.pyapi.database import get_supabase
+from app.pyapi.deps import user_dependency,oauth2_bearer_dependency
 
 load_dotenv()
-
+supabase=get_supabase()
 structured_output_router = APIRouter()
 
 def get_schema_text(model, prefix=""):
@@ -58,7 +60,7 @@ def detect_constraint_type(message_content: str):
     return constraint_models[best_idx]
 
 @structured_output_router.post("/chat/structured_output", response_model=StructuredOutput)
-async def structured_output_endpoint(request: StructuredRequest):
+async def structured_output_endpoint(request: StructuredRequest,user:user_dependency):
     # Example: return a dummy structured output
     structured_outputs = []
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -76,7 +78,12 @@ async def structured_output_endpoint(request: StructuredRequest):
             text_format=constraint_model  # Embed the constraint object schema
         )
         structured_output = response.output_parsed
-        return StructuredOutput(constraints=[structured_output])
+        result = StructuredOutput(constraints=[structured_output])
+        supabase.table("constraints").insert({
+                "constraint_json": result.model_dump(mode='json'),
+                "user_id": user.get('id'),
+            }).execute()
+        return result
     else:
         for msg in request.messages[-1].content.split(','):
             constraint_model = detect_constraint_type(msg)
@@ -91,4 +98,9 @@ async def structured_output_endpoint(request: StructuredRequest):
             )
             structured_output = response.output_parsed
             structured_outputs.append(structured_output)
-    return StructuredOutput(constraints=structured_outputs)
+            result = StructuredOutput(constraints=structured_outputs)
+            supabase.table("constraints").insert({
+                "constraint_json": result.model_dump(mode='json'),
+                "user_id": user.get('id'),
+            }).execute()
+    return result

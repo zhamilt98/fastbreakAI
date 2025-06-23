@@ -6,8 +6,12 @@ import json
 
 load_dotenv()
 
-api_url: str = os.getenv("SUPABASE_URL")
-key: str = os.getenv("SUPABASE_API_KEY")
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+SUPABASE_JWT_SECRET = os.getenv('SUPABASE_JWT_SECRET')
 
-def create_supabase_client():
-    pass
+if not all([SUPABASE_URL, SUPABASE_KEY, SUPABASE_JWT_SECRET]):
+    raise EnvironmentError("One or more Supabase environment variables are missing.")
+
+def get_supabase() -> Client:
+    return create_client(SUPABASE_URL, SUPABASE_KEY)

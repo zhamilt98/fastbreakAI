@@ -1,11 +1,6 @@
 import { cn } from "@/utils/cn";
-import type { Message } from "ai/react";
 
-export function ChatMessageBubble(props: {
-  message: Message;
-  aiEmoji?: string;
-  sources: any[];
-}) {
+export function ChatMessageBubble(props) {
   return (
     <div
       className={cn(

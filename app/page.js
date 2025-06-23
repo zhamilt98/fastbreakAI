@@ -1,7 +1,9 @@
 "use client"
+import "./globals.css";
+import { useContext} from 'react';
 import { ChatWindow } from "@/components/ChatWindow";
 import { GuideInfoBox } from "@/components/guide/GuideInfoBox";
-
+import  ProtectedRoute  from '@/components/protected_route';
 
 
 export default function Home() {
@@ -78,11 +80,13 @@ const InfoCard = (
     </GuideInfoBox>
   );
   return (
-    <ChatWindow
-      endpoint={`https://fastbreak-ai.vercel.app/chat/structured_output`}
-      emptyStateComponent={InfoCard}
-      placeholder={`I am an AI assistant that can analyze text constraints about sports scheduling and return structured information about it. Please list your constraints separated by commas, e.g. "I want to play basketball on weekends, I prefer morning games, I want to avoid rainy days."`}
-      emoji="🧱"
-    />
+    <ProtectedRoute>
+      <ChatWindow
+        endpoint={`http://localhost:8000/chat/structured_output`}
+        emptyStateComponent={InfoCard}
+        placeholder={`I am an AI assistant that can analyze text constraints about sports scheduling and return structured information about it. Please list your constraints separated by commas, e.g. "I want to play basketball on weekends, I prefer morning games, I want to avoid rainy days."`}
+        emoji="🧱"
+      />
+    </ProtectedRoute>
   );
 }

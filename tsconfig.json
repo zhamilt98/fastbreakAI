@@ -34,7 +34,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
+, "app/page.js", "app/layout.js", "app/auth/login.js", "app/context/AuthContext.js", "components/guide/GuideInfoBox.js", "components/ChatMessageBubble.js", "components/ChatWindow.js", "components/IntermediateStep.js", "components/Navbar.js", "components/ui/textarea.js", "components/ui/sonner.js", "components/ui/popover.js", "components/ui/input.js", "components/ui/drawer.js", "components/ui/dialog.js", "components/ui/checkbox.js", "components/ui/button.js"  ],
   "exclude": [
     "node_modules"
   ]

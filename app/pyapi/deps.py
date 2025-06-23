@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from jose import jwt, JWTError
 from dotenv import load_dotenv
 import os
-from .database import create_supabase_client
+from .database import get_supabase
 
 load_dotenv()
 
@@ -14,11 +14,11 @@ SECRET_KEY = os.getenv('AUTH_SECRET_KEY')
 ALGORITHM = os.getenv('AUTH_ALGORITHM')
 
 def get_db():
-    db = create_supabase_client()
+    db = get_supabase()
     try:
         yield db
     finally:
-        db.close()
+        db.auth.sign_out()
         
 
 db_dependency = Annotated[Session, Depends(get_db)]

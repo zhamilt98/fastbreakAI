@@ -1,3 +1,4 @@
+"use client";
 import "./globals.css";
 import { Public_Sans } from "next/font/google";
 import { ActiveLink } from "@/components/Navbar";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { GithubIcon } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { AuthProvider } from './auth/auth_context';
 
 const publicSans = Public_Sans({ subsets: ["latin"] });
 
@@ -31,11 +33,10 @@ const Logo = () => (
 );
 
 export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
+  children
 }) {
   return (
+  <AuthProvider>
     <html lang="en">
       <head>
         <title>LangChain + Next.js Template</title>
@@ -59,6 +60,7 @@ export default function RootLayout({
         <meta name="twitter:image" content="/images/og-image.png" />
       </head>
       <body className={publicSans.className}>
+        
         <NuqsAdapter>
           <div className="bg-secondary grid grid-rows-[auto,1fr] h-[100dvh]">
             <div className="grid grid-cols-[1fr,auto] gap-2 p-4">
@@ -90,13 +92,15 @@ export default function RootLayout({
                 </Button>
               </div>
             </div>
-            <div className="bg-background mx-4 relative grid rounded-t-2xl border border-input border-b-0">
-              <div className="absolute inset-0">{children}</div>
+            <div >
+              <div className="border border-input bg-secondary rounded-lg flex flex-col gap-2 max-w-[768px] w-full mx-auto">{children}</div>
             </div>
           </div>
           <Toaster />
         </NuqsAdapter>
+        {children}
       </body>
     </html>
+    </AuthProvider>
   );
 }

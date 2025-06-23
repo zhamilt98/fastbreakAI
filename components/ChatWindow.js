@@ -1,10 +1,8 @@
 "use client";
 
-import { type Message } from "ai";
 import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import type { FormEvent, ReactNode } from "react";
 import { toast } from "sonner";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 
@@ -25,13 +23,7 @@ import { cn } from "@/utils/cn";
 
 // ... (ChatMessages, ChatInput, ScrollToBottom, StickyToBottomContent, ChatLayout remain unchanged)
 
-function ChatMessages(props: {
-  messages: Message[];
-  emptyStateComponent: ReactNode;
-  sourcesForMessages: Record<string, any>;
-  aiEmoji?: string;
-  className?: string;
-}) {
+function ChatMessages(props) {
   return (
     <div className="flex flex-col max-w-[768px] mx-auto pb-12 w-full">
       {props.messages.map((m, i) => {
@@ -53,17 +45,7 @@ function ChatMessages(props: {
   );
 }
 
-export function ChatInput(props: {
-  onSubmit: (e: FormEvent<HTMLFormElement>) => void;
-  onStop?: () => void;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  loading?: boolean;
-  placeholder?: string;
-  children?: ReactNode;
-  className?: string;
-  actions?: ReactNode;
-}) {
+export function ChatInput(props) {
   const disabled = props.loading && props.onStop == null;
   return (
     <form
@@ -109,7 +91,7 @@ export function ChatInput(props: {
   );
 }
 
-function ScrollToBottom(props: { className?: string }) {
+function ScrollToBottom(props) {
   const { isAtBottom, scrollToBottom } = useStickToBottomContext();
 
   if (isAtBottom) return null;
@@ -125,12 +107,7 @@ function ScrollToBottom(props: { className?: string }) {
   );
 }
 
-function StickyToBottomContent(props: {
-  content: ReactNode;
-  footer?: ReactNode;
-  className?: string;
-  contentClassName?: string;
-}) {
+function StickyToBottomContent(props) {
   const context = useStickToBottomContext();
 
   // scrollRef will also switch between overflow: unset to overflow: auto
@@ -149,7 +126,7 @@ function StickyToBottomContent(props: {
   );
 }
 
-export function ChatLayout(props: { content: ReactNode; footer: ReactNode }) {
+export function ChatLayout(props) {
   return (
     <StickToBottom>
       <StickyToBottomContent
@@ -169,30 +146,21 @@ export function ChatLayout(props: { content: ReactNode; footer: ReactNode }) {
 
 // --- UPDATED ChatWindow BELOW ---
 
-export function ChatWindow(props: {
-  endpoint: string;
-  emptyStateComponent: ReactNode;
-  placeholder?: string;
-  emoji?: string;
-  showIngestForm?: boolean;
-  showIntermediateStepsToggle?: boolean;
-}) {
+export function ChatWindow(props) {
   const [showIntermediateSteps, setShowIntermediateSteps] = useState(
     !!props.showIntermediateStepsToggle,
   );
   const [intermediateStepsLoading, setIntermediateStepsLoading] =
     useState(false);
 
-  const [sourcesForMessages, setSourcesForMessages] = useState<
-    Record<string, any>
-  >({});
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [sourcesForMessages, setSourcesForMessages] = useState({});
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
-  async function sendMessage(e: FormEvent<HTMLFormElement>) {
+  async function sendMessage(e) {
     e.preventDefault();
     if (isLoading || intermediateStepsLoading) return;
 
@@ -200,7 +168,7 @@ export function ChatWindow(props: {
       // Normal message send
       setIsLoading(true);
       try {
-        const userMessage: Message = {
+        const userMessage = {
           id: messages.length.toString(),
           content: input,
           role: "user",
@@ -234,13 +202,13 @@ export function ChatWindow(props: {
           setIsLoading(false);
           return;
         }
-        const responseMessages: Message[] = response.data.messages;
+        const responseMessages = response.data.messages;
         setMessages([...newMessages, ...responseMessages]);
         // Optionally, handle x-sources and x-message-index headers if needed
         const sourcesHeader = response.headers["x-sources"];
         const messageIndexHeader = response.headers["x-message-index"];
         if (sourcesHeader && messageIndexHeader !== undefined) {
-            let sources: unknown[] = [];
+          let sources = [];
           try {
             sources = JSON.parse(
               Buffer.from(sourcesHeader, "base64").toString("utf8")
@@ -253,7 +221,7 @@ export function ChatWindow(props: {
             }));
           }
         }
-      } catch (e: any) {
+      } catch (e) {
         toast.error(`Error while processing your request`, {
           description: e.message,
         });
@@ -290,12 +258,12 @@ export function ChatWindow(props: {
         return;
       }
 
-      const responseMessages: Message[] = response.data.messages;
+      const responseMessages = response.data.messages;
 
       // Represent intermediate steps as system messages for display purposes
       // TODO: Add proper support for tool messages
       const toolCallMessages = responseMessages.filter(
-        (responseMessage: Message) => {
+        (responseMessage) => {
           return (
             (responseMessage.role === "assistant" &&
               !!responseMessage.tool_calls?.length) ||
@@ -310,7 +278,7 @@ export function ChatWindow(props: {
         const toolMessage = toolCallMessages[i + 1];
         intermediateStepMessages.push({
           id: (messagesWithUserReply.length + i / 2).toString(),
-          role: "system" as const,
+          role: "system",
           content: JSON.stringify({
             action: aiMessage.tool_calls?.[0],
             observation: toolMessage.content,
@@ -334,7 +302,7 @@ export function ChatWindow(props: {
           role: "assistant",
         },
       ]);
-    } catch (e: any) {
+    } catch (e) {
       setIntermediateStepsLoading(false);
       toast.error(`Error while processing your request`, {
         description: e.message,
